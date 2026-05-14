@@ -1,0 +1,40 @@
+# =============================================================================
+# Calitina PVP - Configuration
+# All tunable values for the Ancient Core / Fatal Core PVP system
+# =============================================================================
+
+# --- Ancient Core (远古核心) ---
+
+# Chance (percentage, 0.0-100.0) that a Warden drops an Ancient Core on death
+warden-drop-chance: 1.0
+
+# Damage dealt by Ancient Core as percentage of Warden's sonic boom damage (10 base)
+# 60 = 6 damage (3 hearts) on Normal difficulty
+ancient-core-damage-percent: 60
+
+# Maximum uses before the Ancient Core breaks
+ancient-core-durability: 100
+
+# --- Boss Special Drops ---
+
+# Chance (percentage, 0.0-100.0) that Ender Dragon drops 受远古之力共鸣的龙蛋
+# when killed with Ancient Core
+dragon-egg-drop-chance: 30.0
+
+# Chance (percentage, 0.0-100.0) that Wither drops 受远古之力共鸣的下界之星
+# when killed with Ancient Core
+nether-star-drop-chance: 30.0
+
+# --- Fatal Core (必杀核心) ---
+
+# Base uses for standalone Fatal Core
+fatal-core-base-uses: 10
+
+# Bonus uses for specialty weapons (sword, bow, crossbow, axe, mace, trident)
+fatal-core-specialty-bonus: 3
+
+# Sonic boom range (blocks) for standalone Fatal Core right-click
+fatal-core-sonic-range: 15
+
+# Sonic boom damage for standalone Fatal Core
+fatal-core-sonic-damage: 15.0
