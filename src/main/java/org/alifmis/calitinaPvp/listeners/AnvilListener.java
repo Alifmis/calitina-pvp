@@ -39,12 +39,20 @@ public class AnvilListener implements Listener {
         // Don't allow applying Fatal Core to an already-fatal weapon
         if (items.isFatalWeapon(left)) return;
 
-        // Calculate uses
+        // Read Fatal Core's remaining uses
+        int coreUses = items.getFatalCoreUses(right);
         int baseUses = plugin.getConfig().getInt("fatal-core-base-uses", 10);
-        int bonus = CustomItems.SPECIALTY_WEAPONS.contains(type)
-            ? plugin.getConfig().getInt("fatal-core-specialty-bonus", 3)
-            : 0;
-        int totalUses = baseUses + bonus;
+        int totalUses;
+
+        if (CustomItems.SPECIALTY_WEAPONS.contains(type)) {
+            // Mace: proportional transfer
+            int bonus = plugin.getConfig().getInt("fatal-core-specialty-bonus", 3);
+            int maxWeaponUses = baseUses + bonus; // 13
+            totalUses = Math.max(1, Math.round((float) coreUses / baseUses * maxWeaponUses));
+        } else {
+            // Other weapons: direct transfer
+            totalUses = coreUses;
+        }
 
         // Create result
         ItemStack result = items.applyFatalCoreToWeapon(left, totalUses);

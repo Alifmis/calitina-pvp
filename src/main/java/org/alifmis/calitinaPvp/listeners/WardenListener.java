@@ -70,25 +70,42 @@ public class WardenListener implements Listener {
         // Fire sonic boom
         fireAncientSonicBoom(player);
 
-        // Decrement durability
+        // Decrement durability — handle stacking
         durability--;
-        if (durability <= 0) {
-            player.getInventory().setItemInMainHand(null);
-            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-        } else {
-            final int finalDurability = durability;
-            final int maxDurability = plugin.getConfig().getInt("ancient-core-durability", 100);
-            items.setAncientCoreDurability(item, durability);
-            item.editMeta(meta -> {
-                java.util.List<net.kyori.adventure.text.Component> lore = meta.hasLore()
-                    ? new java.util.ArrayList<>(meta.lore())
-                    : new java.util.ArrayList<>();
-                if (lore.size() >= 2) {
-                    lore.set(lore.size() - 2, CustomItems.mm("<gray>耐久: <aqua>" + finalDurability
-                        + "</aqua> / " + maxDurability + "</gray>"));
+        int amount = item.getAmount();
+        int maxDurability = plugin.getConfig().getInt("ancient-core-durability", 100);
+
+        if (amount > 1) {
+            // Stacked: remove 1 from stack, give back item with decremented durability
+            item.setAmount(amount - 1);
+            if (durability > 0) {
+                ItemStack newItem = items.createAncientCore(durability);
+                newItem.setAmount(1);
+                Map<Integer, ItemStack> leftover = player.getInventory().addItem(newItem);
+                for (ItemStack drop : leftover.values()) {
+                    player.getWorld().dropItem(player.getLocation(), drop);
                 }
-                meta.lore(lore);
-            });
+            }
+            // durability=0: item consumed (already removed from stack)
+        } else {
+            // Single item: decrement in place
+            if (durability <= 0) {
+                player.getInventory().setItemInMainHand(null);
+                player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+            } else {
+                final int finalDurability = durability;
+                items.setAncientCoreDurability(item, durability);
+                item.editMeta(meta -> {
+                    java.util.List<net.kyori.adventure.text.Component> lore = meta.hasLore()
+                        ? new java.util.ArrayList<>(meta.lore())
+                        : new java.util.ArrayList<>();
+                    if (lore.size() >= 2) {
+                        lore.set(lore.size() - 2, CustomItems.mm("<gray>耐久: <aqua>" + finalDurability
+                            + "</aqua> / " + maxDurability + "</gray>"));
+                    }
+                    meta.lore(lore);
+                });
+            }
         }
     }
 

@@ -3,11 +3,13 @@ package org.alifmis.calitinaPvp.listeners;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 import org.alifmis.calitinaPvp.CalitinaPvp;
 import org.alifmis.calitinaPvp.CustomItems;
 
@@ -53,8 +55,9 @@ public class BossDropListener implements Listener {
         World endWorld = event.getEntity().getWorld();
         Location dropLoc = new Location(endWorld, DRAGON_DROP_X, DRAGON_DROP_Y, DRAGON_DROP_Z);
 
-        // Drop as item entity at fixed coordinates
-        endWorld.dropItem(dropLoc, egg);
+        // Drop with zero velocity so it doesn't fly away
+        Item dropped = endWorld.dropItem(dropLoc, egg);
+        dropped.setVelocity(new Vector(0, 0, 0));
 
         wardenListener.ancientCoreLastHitter.remove(event.getEntity().getUniqueId());
     }

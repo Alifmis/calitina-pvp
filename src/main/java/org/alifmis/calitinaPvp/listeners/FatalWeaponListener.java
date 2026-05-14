@@ -19,6 +19,7 @@ import org.bukkit.util.Vector;
 import org.alifmis.calitinaPvp.CalitinaPvp;
 import org.alifmis.calitinaPvp.CustomItems;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -88,29 +89,45 @@ public class FatalWeaponListener implements Listener {
             return;
         }
 
-        // Fire sonic boom
+        // Fire sonic boom (marks target for instant kill)
         fireFatalSonicBoom(player);
 
-        // Decrement uses
+        // Decrement uses — handle stacking
         uses--;
-        final int newUses = uses;
-        if (newUses <= 0) {
-            player.getInventory().setItemInMainHand(null);
-            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-        } else {
-            item.editMeta(meta -> {
-                meta.getPersistentDataContainer().set(
-                    items.fatalCoreKey(), PersistentDataType.INTEGER, newUses
-                );
-                // Update lore
-                java.util.List<net.kyori.adventure.text.Component> lore = meta.hasLore()
-                    ? new java.util.ArrayList<>(meta.lore())
-                    : new java.util.ArrayList<>();
-                if (lore.size() >= 1) {
-                    lore.set(lore.size() - 1, CustomItems.mm("<gray>剩余使用次数: <red>" + newUses + "</red></gray>"));
+        int amount = item.getAmount();
+
+        if (amount > 1) {
+            // Stacked: remove 1 from stack, give back item with decremented durability
+            item.setAmount(amount - 1);
+            if (uses > 0) {
+                ItemStack newItem = items.createFatalCore(uses);
+                newItem.setAmount(1);
+                Map<Integer, ItemStack> leftover = player.getInventory().addItem(newItem);
+                for (ItemStack drop : leftover.values()) {
+                    player.getWorld().dropItem(player.getLocation(), drop);
                 }
-                meta.lore(lore);
-            });
+            }
+            // if uses=0, the single item is just consumed (already removed from stack)
+        } else {
+            // Single item: decrement in place
+            final int newUses = uses;
+            if (newUses <= 0) {
+                player.getInventory().setItemInMainHand(null);
+                player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+            } else {
+                item.editMeta(meta -> {
+                    meta.getPersistentDataContainer().set(
+                        items.fatalCoreKey(), PersistentDataType.INTEGER, newUses
+                    );
+                    java.util.List<net.kyori.adventure.text.Component> lore = meta.hasLore()
+                        ? new java.util.ArrayList<>(meta.lore())
+                        : new java.util.ArrayList<>();
+                    if (lore.size() >= 1) {
+                        lore.set(lore.size() - 1, CustomItems.mm("<gray>剩余使用次数: <red>" + newUses + "</red></gray>"));
+                    }
+                    meta.lore(lore);
+                });
+            }
         }
     }
 
@@ -120,7 +137,6 @@ public class FatalWeaponListener implements Listener {
         Vector direction = eye.getDirection();
 
         double range = plugin.getConfig().getDouble("fatal-core-sonic-range", 15.0);
-        double damage = plugin.getConfig().getDouble("fatal-core-sonic-damage", 15.0);
 
         // Ray trace to find target entity
         RayTraceResult result = world.rayTraceEntities(
@@ -144,7 +160,6 @@ public class FatalWeaponListener implements Listener {
                 Particle.DUST, particleLoc, 2, 0.05, 0.05, 0.05, 0,
                 new Particle.DustOptions(Color.fromRGB(200, 20, 20), 1.2f)
             );
-            // Sonic boom particles mixed in
             if (i % 3 == 0) {
                 world.spawnParticle(Particle.SONIC_BOOM, particleLoc, 1, 0, 0, 0, 0);
             }
@@ -153,9 +168,14 @@ public class FatalWeaponListener implements Listener {
         // Sound along the path
         world.playSound(eye, Sound.ENTITY_WARDEN_SONIC_BOOM, 1.0f, 0.6f);
 
-        // Damage the hit entity
+        // INSTANT KILL the hit entity (bypasses totem)
         if (result != null && result.getHitEntity() instanceof LivingEntity target) {
-            target.damage(damage, player);
+            // Mark for fatal death (bypasses totem)
+            fatalMarked.add(target.getUniqueId());
+
+            // Set health to 0 directly for instant kill
+            target.setHealth(0);
+
             // Extra particles at hit location
             Location hitLoc = target.getLocation().add(0, 1, 0);
             world.spawnParticle(
@@ -183,7 +203,6 @@ public class FatalWeaponListener implements Listener {
                 java.util.List<net.kyori.adventure.text.Component> lore = meta.hasLore()
                     ? new java.util.ArrayList<>(meta.lore())
                     : new java.util.ArrayList<>();
-                // Update the last lore line (remaining uses)
                 if (lore.size() >= 1) {
                     for (int i = lore.size() - 1; i >= 0; i--) {
                         String plain = net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
