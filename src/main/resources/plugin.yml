@@ -1,0 +1,4 @@
+name: calitina-pvp
+version: '1.0-SNAPSHOT'
+main: org.alifmis.calitinaPvp.CalitinaPvp
+api-version: '1.21'
