@@ -1,5 +1,7 @@
 package org.alifmis.calitinaPvp.listeners;
 
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -16,6 +18,11 @@ public class BossDropListener implements Listener {
     private final CalitinaPvp plugin;
     private final CustomItems items;
     private final WardenListener wardenListener;
+
+    // Dragon egg drop location in the End
+    private static final double DRAGON_DROP_X = 0.5;
+    private static final double DRAGON_DROP_Y = 65.0;
+    private static final double DRAGON_DROP_Z = 0.5;
 
     public BossDropListener(CalitinaPvp plugin, CustomItems items, WardenListener wardenListener) {
         this.plugin = plugin;
@@ -35,7 +42,6 @@ public class BossDropListener implements Listener {
     }
 
     private void handleDragonDrop(EntityDeathEvent event) {
-        // Check if last hit was from Ancient Core
         if (!wardenListener.ancientCoreLastHitter.containsKey(event.getEntity().getUniqueId())) {
             return;
         }
@@ -44,11 +50,12 @@ public class BossDropListener implements Listener {
         if (ThreadLocalRandom.current().nextDouble() * 100.0 >= chance) return;
 
         ItemStack egg = items.createResonantDragonEgg();
-        event.getEntity().getWorld().dropItemNaturally(
-            event.getEntity().getLocation(), egg
-        );
+        World endWorld = event.getEntity().getWorld();
+        Location dropLoc = new Location(endWorld, DRAGON_DROP_X, DRAGON_DROP_Y, DRAGON_DROP_Z);
 
-        // Clean up tracking
+        // Drop as item entity at fixed coordinates
+        endWorld.dropItem(dropLoc, egg);
+
         wardenListener.ancientCoreLastHitter.remove(event.getEntity().getUniqueId());
     }
 

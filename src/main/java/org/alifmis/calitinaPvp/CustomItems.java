@@ -25,12 +25,7 @@ public final class CustomItems {
     public static final String KEY_FATAL_HIT = "fatal_hit"; // temporary marker on victim
 
     public static final Set<Material> SPECIALTY_WEAPONS = Set.of(
-        Material.WOODEN_SWORD, Material.STONE_SWORD, Material.IRON_SWORD,
-        Material.GOLDEN_SWORD, Material.DIAMOND_SWORD, Material.NETHERITE_SWORD,
-        Material.BOW, Material.CROSSBOW,
-        Material.WOODEN_AXE, Material.STONE_AXE, Material.IRON_AXE,
-        Material.GOLDEN_AXE, Material.DIAMOND_AXE, Material.NETHERITE_AXE,
-        Material.MACE, Material.TRIDENT
+        Material.MACE
     );
 
     public static final Set<Material> ALL_WEAPONS = Set.of(
@@ -151,7 +146,8 @@ public final class CustomItems {
                 mm("<dark_gray>挥击都是远古的回响。</dark_gray>"),
                 Component.empty(),
                 mm("<gray>耐久: <aqua>" + durability + "</aqua> / " + durability + "</gray>"),
-                mm("<dark_gray>伤害: 监守者声波的 60%</dark_gray>")
+                mm("<dark_gray>右键发射远古声波</dark_gray>"),
+                mm("<dark_gray>伤害: 监守者声波的 " + 60 + "%</dark_gray>")
             ));
         });
         return item;

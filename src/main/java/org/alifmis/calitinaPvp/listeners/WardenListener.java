@@ -1,16 +1,18 @@
 package org.alifmis.calitinaPvp.listeners;
 
-import org.bukkit.Material;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Warden;
+import org.bukkit.*;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.util.RayTraceResult;
+import org.bukkit.util.Vector;
 import org.alifmis.calitinaPvp.CalitinaPvp;
 import org.alifmis.calitinaPvp.CustomItems;
 
@@ -46,52 +48,106 @@ public class WardenListener implements Listener {
         );
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onEntityDamage(EntityDamageByEntityEvent event) {
-        if (!(event.getDamager() instanceof Player player)) return;
+    @EventHandler
+    public void onAncientCoreUse(PlayerInteractEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) return;
+        if (event.getAction() != Action.RIGHT_CLICK_AIR
+            && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
-        ItemStack weapon = player.getInventory().getItemInMainHand();
+        Player player = event.getPlayer();
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (!items.isAncientCore(item)) return;
 
-        if (items.isAncientCore(weapon)) {
-            EntityType type = event.getEntityType();
-            if (type == EntityType.ENDER_DRAGON || type == EntityType.WITHER) {
-                ancientCoreLastHitter.put(event.getEntity().getUniqueId(), player.getUniqueId());
-            }
+        event.setCancelled(true);
 
-            double percent = plugin.getConfig().getDouble("ancient-core-damage-percent", 60.0);
-            // Warden sonic boom base damage is 10.0
-            double damage = 10.0 * (percent / 100.0);
-            event.setDamage(damage);
-
-            decrementAncientCoreDurability(player, weapon);
-        }
-    }
-
-    private void decrementAncientCoreDurability(Player player, ItemStack weapon) {
-        int durability = items.getAncientCoreDurability(weapon);
-        durability--;
-
+        int durability = items.getAncientCoreDurability(item);
         if (durability <= 0) {
-            // Break the weapon
             player.getInventory().setItemInMainHand(null);
-            player.playSound(player.getLocation(),
-                org.bukkit.Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+            return;
+        }
+
+        // Fire sonic boom
+        fireAncientSonicBoom(player);
+
+        // Decrement durability
+        durability--;
+        if (durability <= 0) {
+            player.getInventory().setItemInMainHand(null);
+            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
         } else {
-            items.setAncientCoreDurability(weapon, durability);
-            // Update lore to show remaining durability
             final int finalDurability = durability;
             final int maxDurability = plugin.getConfig().getInt("ancient-core-durability", 100);
-            weapon.editMeta(meta -> {
+            items.setAncientCoreDurability(item, durability);
+            item.editMeta(meta -> {
                 java.util.List<net.kyori.adventure.text.Component> lore = meta.hasLore()
                     ? new java.util.ArrayList<>(meta.lore())
                     : new java.util.ArrayList<>();
-                // Update the durability line (second to last lore line)
                 if (lore.size() >= 2) {
                     lore.set(lore.size() - 2, CustomItems.mm("<gray>耐久: <aqua>" + finalDurability
                         + "</aqua> / " + maxDurability + "</gray>"));
                 }
                 meta.lore(lore);
             });
+        }
+    }
+
+    private void fireAncientSonicBoom(Player player) {
+        World world = player.getWorld();
+        Location eye = player.getEyeLocation();
+        Vector direction = eye.getDirection();
+
+        double range = 15.0; // same as warden
+        double percent = plugin.getConfig().getDouble("ancient-core-damage-percent", 60.0);
+        double damage = 10.0 * (percent / 100.0);
+
+        // Ray trace to find target entity
+        RayTraceResult result = world.rayTraceEntities(
+            eye, direction, range, 0.5,
+            entity -> entity instanceof LivingEntity && entity != player
+        );
+
+        double hitDistance = result != null && result.getHitPosition() != null
+            ? result.getHitPosition().distance(eye.toVector())
+            : range;
+
+        // Spawn particles along the path (dark teal/cyan — warden themed)
+        Location particleLoc = eye.clone();
+        Vector step = direction.clone().normalize().multiply(0.3);
+        int particleCount = (int) (hitDistance / 0.3);
+
+        for (int i = 0; i < particleCount; i++) {
+            particleLoc.add(step);
+            world.spawnParticle(
+                Particle.DUST, particleLoc, 2, 0.05, 0.05, 0.05, 0,
+                new Particle.DustOptions(Color.fromRGB(0, 200, 180), 1.2f)
+            );
+            if (i % 3 == 0) {
+                world.spawnParticle(Particle.SONIC_BOOM, particleLoc, 1, 0, 0, 0, 0);
+            }
+        }
+
+        // Sound along the path
+        world.playSound(eye, Sound.ENTITY_WARDEN_SONIC_BOOM, 1.0f, 0.8f);
+
+        // Damage the hit entity
+        if (result != null && result.getHitEntity() instanceof LivingEntity target) {
+            // Track boss hits
+            EntityType type = target.getType();
+            if (type == EntityType.ENDER_DRAGON || type == EntityType.WITHER) {
+                ancientCoreLastHitter.put(target.getUniqueId(), player.getUniqueId());
+            }
+
+            target.damage(damage, player);
+
+            // Extra particles at hit location
+            Location hitLoc = target.getLocation().add(0, 1, 0);
+            world.spawnParticle(
+                Particle.DUST, hitLoc, 40, 0.5, 1.0, 0.5, 0,
+                new Particle.DustOptions(Color.fromRGB(0, 200, 180), 2.0f)
+            );
+            world.spawnParticle(Particle.SONIC_BOOM, hitLoc, 8, 0.3, 0.3, 0.3, 0);
+            world.playSound(hitLoc, Sound.ENTITY_WARDEN_SONIC_BOOM, 1.0f, 0.5f);
         }
     }
 }
