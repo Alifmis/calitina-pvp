@@ -1,14 +1,21 @@
 package org.alifmis.calitinaPvp.listeners;
 
 import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.ItemStack;
 import org.alifmis.calitinaPvp.CalitinaPvp;
 import org.alifmis.calitinaPvp.CustomItems;
+
+import java.util.Map;
 
 public class AnvilListener implements Listener {
 
@@ -45,19 +52,80 @@ public class AnvilListener implements Listener {
         int totalUses;
 
         if (CustomItems.SPECIALTY_WEAPONS.contains(type)) {
-            // Mace: proportional transfer
             int bonus = plugin.getConfig().getInt("fatal-core-specialty-bonus", 3);
-            int maxWeaponUses = baseUses + bonus; // 13
+            int maxWeaponUses = baseUses + bonus;
             totalUses = Math.max(1, Math.round((float) coreUses / baseUses * maxWeaponUses));
         } else {
-            // Other weapons: direct transfer
             totalUses = coreUses;
         }
 
-        // Create result
         ItemStack result = items.applyFatalCoreToWeapon(left, totalUses);
-
         event.setResult(result);
         inv.setRepairCost(10);
+    }
+
+    @SuppressWarnings("removal")
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onAnvilClick(InventoryClickEvent event) {
+        if (!(event.getInventory() instanceof AnvilInventory inv)) return;
+
+        // Only handle result slot (rawSlot = 2 in anvil)
+        if (event.getRawSlot() != 2) return;
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+
+        ItemStack result = inv.getItem(2);
+        if (result == null || !items.isFatalWeapon(result)) return;
+
+        ItemStack right = inv.getSecondItem();
+        if (right == null || !items.isFatalCore(right)) return;
+
+        // Cancel default behavior — we'll handle consumption manually
+        event.setCancelled(true);
+
+        // Left slot: consume 1
+        ItemStack left = inv.getFirstItem();
+        if (left != null) {
+            left.setAmount(left.getAmount() - 1);
+            inv.setFirstItem(left.getAmount() > 0 ? left : null);
+        }
+
+        // Right slot: consume only 1, not the whole stack
+        right.setAmount(right.getAmount() - 1);
+        inv.setSecondItem(right.getAmount() > 0 ? right : null);
+
+        // Give result to player
+        ItemStack oneResult = result.clone();
+        oneResult.setAmount(1);
+
+        if (event.isShiftClick()) {
+            Map<Integer, ItemStack> leftover = player.getInventory().addItem(oneResult);
+            for (ItemStack drop : leftover.values()) {
+                player.getWorld().dropItem(player.getLocation(), drop);
+            }
+        } else {
+            ItemStack cursor = event.getCursor();
+            if (cursor == null || cursor.getType() == Material.AIR) {
+                event.setCursor(oneResult);
+            } else if (cursor.isSimilar(oneResult) && cursor.getAmount() < cursor.getMaxStackSize()) {
+                cursor.setAmount(cursor.getAmount() + 1);
+            } else {
+                Map<Integer, ItemStack> leftover = player.getInventory().addItem(oneResult);
+                for (ItemStack drop : leftover.values()) {
+                    player.getWorld().dropItem(player.getLocation(), drop);
+                }
+            }
+        }
+
+        // Pay levels
+        int cost = inv.getRepairCost();
+        if (cost > 0) {
+            player.setLevel(player.getLevel() - cost);
+        }
+
+        player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE, 1.0f, 1.0f);
+        player.updateInventory();
+
+        // Clear result slot — PrepareAnvilEvent will re-fire and set new result if applicable
+        inv.setItem(2, null);
     }
 }
