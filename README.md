@@ -90,6 +90,27 @@ All values in `config.yml`:
 | `fatal-core-sonic-range` | 15 | Fatal Core sonic boom range (blocks) |
 | `fatal-core-sonic-damage` | 15.0 | Fatal Core sonic boom damage (obsolete — now instant kill) |
 
+## Commands
+
+### `/pvp give`
+
+```
+/pvp give <player_name> <item> [durability]
+```
+
+OP-only / console command. Gives a special plugin item to a player.
+
+| Item | Notes |
+|------|-------|
+| `ancient_core` | Default durability from config; optional `[durability]` override |
+| `resonant_dragon_egg` | No durability parameter needed |
+| `resonant_nether_star` | No durability parameter needed |
+| `fatal_core` | Default uses from config; optional `[durability]` override |
+
+Tab-complete supported for all arguments (player names, item names, durability hint).
+
+Fatal weapons are **not** included — they are only obtainable via anvil.
+
 ## Compatibility
 
 ### dragon-egg-plugin

@@ -99,8 +99,9 @@ public class WardenListener implements Listener {
                     java.util.List<net.kyori.adventure.text.Component> lore = meta.hasLore()
                         ? new java.util.ArrayList<>(meta.lore())
                         : new java.util.ArrayList<>();
-                    if (lore.size() >= 2) {
-                        lore.set(lore.size() - 2, CustomItems.mm("<gray>耐久: <aqua>" + finalDurability
+                    // Durability line is at lore.size() - 3 (after header, 5 desc lines, empty)
+                    if (lore.size() >= 3) {
+                        lore.set(lore.size() - 3, CustomItems.mm("<gray>耐久: <aqua>" + finalDurability
                             + "</aqua> / " + maxDurability + "</gray>"));
                     }
                     meta.lore(lore);

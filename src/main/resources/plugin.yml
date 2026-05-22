@@ -3,3 +3,12 @@ version: '${version}'
 main: org.alifmis.calitinaPvp.CalitinaPvp
 api-version: '1.21'
 folia-supported: true
+commands:
+  pvp:
+    description: "Calitina PVP admin commands"
+    usage: "/pvp give <player_name> <item> [durability]"
+    permission: calitina-pvp.admin
+permissions:
+  calitina-pvp.admin:
+    description: "Allows use of /pvp commands"
+    default: op
