@@ -132,6 +132,14 @@ OP-only / console command. Removes a player from the Ancient Core cooldown list,
 
 OP-only / console command. Lists all players currently on the Ancient Core cooldown list (players who have already obtained one).
 
+### `/pvp reload`
+
+```
+/pvp reload
+```
+
+OP-only / console command. Reloads `config.yml` and `ancient-core-players.txt` instantly — no server restart needed. Use this after editing either file by hand.
+
 ## Compatibility
 
 ### dragon-egg-plugin

@@ -24,7 +24,7 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> DURABILITY_REQUIRED = List.of("ancient_core", "fatal_core");
 
-    private static final List<String> SUBCOMMANDS = List.of("give", "allow", "list");
+    private static final List<String> SUBCOMMANDS = List.of("give", "allow", "list", "reload");
 
     private final CustomItems items;
     private final CalitinaPvp plugin;
@@ -54,9 +54,10 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
             case "give" -> handleGive(sender, args);
             case "allow" -> handleAllow(sender, args);
             case "list" -> handleList(sender);
+            case "reload" -> handleReload(sender);
             default -> {
                 sender.sendMessage(CustomItems.mm("<red>未知子命令: " + sub
-                    + "。可用: give, allow, list</red>"));
+                    + "。可用: give, allow, list, reload</red>"));
                 yield true;
             }
         };
@@ -167,6 +168,12 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
         for (String name : names) {
             sender.sendMessage(CustomItems.mm("<gray>  - " + name + "</gray>"));
         }
+        return true;
+    }
+
+    private boolean handleReload(CommandSender sender) {
+        plugin.reloadAll();
+        sender.sendMessage(CustomItems.mm("<green>配置已重新加载。</green>"));
         return true;
     }
 

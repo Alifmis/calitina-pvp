@@ -83,11 +83,18 @@ public final class CalitinaPvp extends JavaPlugin {
         saveCooldownFile();
     }
 
+    public void reloadAll() {
+        reloadConfig();
+        loadCooldownFile();
+        getLogger().info("Config and cooldown file reloaded.");
+    }
+
     public Set<String> getAncientCoreCooldownNames() {
         return Collections.unmodifiableSet(ancientCoreCooldown);
     }
 
     private void loadCooldownFile() {
+        ancientCoreCooldown.clear();
         if (!cooldownFile.exists()) return;
         try {
             List<String> lines = Files.readAllLines(cooldownFile.toPath(), StandardCharsets.UTF_8);
