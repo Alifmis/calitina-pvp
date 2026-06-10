@@ -133,6 +133,7 @@ public final class CustomItems {
     }
 
     public ItemStack createAncientCore(int durability) {
+        int damagePercent = plugin.getConfig().getInt("ancient-core-damage-percent", 60);
         ItemStack item = ItemStack.of(Material.ECHO_SHARD);
         item.editMeta(meta -> {
             meta.getPersistentDataContainer().set(ancientCoreKey, PersistentDataType.INTEGER, durability);
@@ -145,9 +146,9 @@ public final class CustomItems {
                 mm("<dark_gray>监守者同源的声波共振，每一次</dark_gray>"),
                 mm("<dark_gray>挥击都是远古的回响。</dark_gray>"),
                 Component.empty(),
-                mm("<gray>耐久: <aqua>" + durability + "</aqua> / " + durability + "</gray>"),
+                mm("<gray>剩余耐久: <aqua>" + durability + "</aqua></gray>"),
                 mm("<dark_gray>右键发射远古声波</dark_gray>"),
-                mm("<dark_gray>伤害: 监守者声波的 " + 60 + "%</dark_gray>")
+                mm("<dark_gray>伤害: 监守者声波的 " + damagePercent + "%</dark_gray>")
             ));
         });
         return item;

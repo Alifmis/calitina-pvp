@@ -83,7 +83,6 @@ public class WardenListener implements Listener {
         // Decrement durability — handle stacking
         durability--;
         int amount = item.getAmount();
-        int maxDurability = plugin.getConfig().getInt("ancient-core-durability", 100);
 
         if (amount > 1) {
             // Stacked: remove 1 from stack, give back item with decremented durability
@@ -111,8 +110,8 @@ public class WardenListener implements Listener {
                         : new java.util.ArrayList<>();
                     // Durability line is at lore.size() - 3 (after header, 5 desc lines, empty)
                     if (lore.size() >= 3) {
-                        lore.set(lore.size() - 3, CustomItems.mm("<gray>耐久: <aqua>" + finalDurability
-                            + "</aqua> / " + maxDurability + "</gray>"));
+                        lore.set(lore.size() - 3, CustomItems.mm("<gray>剩余耐久: <aqua>" + finalDurability
+                            + "</aqua></gray>"));
                     }
                     meta.lore(lore);
                 });
