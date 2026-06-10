@@ -32,7 +32,8 @@ Warden ──1%──▶ Ancient Core (远古核心)
 ## Items
 
 ### Ancient Core (远古核心)
-- **Source**: Warden death (default 1% chance, configurable)
+- **Source**: Warden death — must be killed **by a player**. Each player may only obtain **one** Ancient Core ever (tracked by player name).
+- **Drop chance**: 1% (configurable)
 - **Model**: Echo Shard
 - **Use**: Right-click fires a teal Warden-style sonic boom (60% of Warden damage)
 - **Durability**: 100 uses (configurable)
@@ -110,6 +111,26 @@ OP-only / console command. Gives a special plugin item to a player.
 Tab-complete supported for all arguments (player names, item names, durability hint).
 
 Fatal weapons are **not** included — they are only obtainable via anvil.
+
+### `/pvp allow`
+
+```
+/pvp allow [player_name]
+```
+
+OP-only / console command. Removes a player from the Ancient Core cooldown list, allowing them to obtain another Ancient Core from a Warden kill.
+
+| Argument | Notes |
+|----------|-------|
+| `[player_name]` | If omitted, removes **all** players from the cooldown list |
+
+### `/pvp list`
+
+```
+/pvp list
+```
+
+OP-only / console command. Lists all players currently on the Ancient Core cooldown list (players who have already obtained one).
 
 ## Compatibility
 

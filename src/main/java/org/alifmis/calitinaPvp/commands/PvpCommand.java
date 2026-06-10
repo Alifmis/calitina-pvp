@@ -6,12 +6,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.alifmis.calitinaPvp.CalitinaPvp;
 import org.alifmis.calitinaPvp.CustomItems;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.Set;
 
 public class PvpCommand implements CommandExecutor, TabCompleter {
 
@@ -24,10 +24,14 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> DURABILITY_REQUIRED = List.of("ancient_core", "fatal_core");
 
-    private final CustomItems items;
+    private static final List<String> SUBCOMMANDS = List.of("give", "allow", "list");
 
-    public PvpCommand(CustomItems items) {
+    private final CustomItems items;
+    private final CalitinaPvp plugin;
+
+    public PvpCommand(CustomItems items, CalitinaPvp plugin) {
         this.items = items;
+        this.plugin = plugin;
     }
 
     @Override
@@ -39,7 +43,27 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        if (args.length < 2 || !args[0].equalsIgnoreCase("give")) {
+        if (args.length < 1) {
+            sender.sendMessage(CustomItems.mm("<red>用法: /pvp give|allow|list</red>"));
+            return true;
+        }
+
+        String sub = args[0].toLowerCase();
+
+        return switch (sub) {
+            case "give" -> handleGive(sender, args);
+            case "allow" -> handleAllow(sender, args);
+            case "list" -> handleList(sender);
+            default -> {
+                sender.sendMessage(CustomItems.mm("<red>未知子命令: " + sub
+                    + "。可用: give, allow, list</red>"));
+                yield true;
+            }
+        };
+    }
+
+    private boolean handleGive(CommandSender sender, String[] args) {
+        if (args.length < 3) {
             sender.sendMessage(CustomItems.mm("<red>用法: /pvp give <player_name> <item> [durability]</red>"));
             return true;
         }
@@ -69,8 +93,7 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
         ItemStack result = switch (itemArg) {
             case "ancient_core" -> {
                 int maxDura = durability > 0 ? durability
-                    : Bukkit.getPluginManager().getPlugin("calitina-pvp")
-                        .getConfig().getInt("ancient-core-durability", 100);
+                    : plugin.getConfig().getInt("ancient-core-durability", 100);
                 yield items.createAncientCore(maxDura);
             }
             case "resonant_dragon_egg" -> {
@@ -87,8 +110,7 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
             }
             case "fatal_core" -> {
                 int uses = durability > 0 ? durability
-                    : Bukkit.getPluginManager().getPlugin("calitina-pvp")
-                        .getConfig().getInt("fatal-core-base-uses", 10);
+                    : plugin.getConfig().getInt("fatal-core-base-uses", 10);
                 yield items.createFatalCore(uses);
             }
             default -> {
@@ -112,6 +134,42 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    private boolean handleAllow(CommandSender sender, String[] args) {
+        if (args.length == 1) {
+            // /pvp allow — remove ALL players
+            int count = plugin.getAncientCoreCooldownNames().size();
+            plugin.removeAllAncientCoreCooldowns();
+            sender.sendMessage(CustomItems.mm("<green>已移除所有 " + count
+                + " 名玩家的远古核心掉落限制。</green>"));
+            return true;
+        }
+
+        // /pvp allow <player_name>
+        String name = args[1];
+        if (!plugin.isAncientCoreCooldown(name)) {
+            sender.sendMessage(CustomItems.mm("<yellow>玩家 " + name + " 不在限制列表中。</yellow>"));
+            return true;
+        }
+
+        plugin.removeAncientCoreCooldown(name);
+        sender.sendMessage(CustomItems.mm("<green>已移除 " + name + " 的远古核心掉落限制。</green>"));
+        return true;
+    }
+
+    private boolean handleList(CommandSender sender) {
+        Set<String> names = plugin.getAncientCoreCooldownNames();
+        if (names.isEmpty()) {
+            sender.sendMessage(CustomItems.mm("<gray>当前无玩家被限制远古核心掉落。</gray>"));
+            return true;
+        }
+
+        sender.sendMessage(CustomItems.mm("<gold>已获得过远古核心的玩家 (" + names.size() + "):</gold>"));
+        for (String name : names) {
+            sender.sendMessage(CustomItems.mm("<gray>  - " + name + "</gray>"));
+        }
+        return true;
+    }
+
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender,
                                                  @NotNull Command command,
@@ -122,36 +180,50 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 1) {
-            // Subcommand: give
-            if ("give".startsWith(args[0].toLowerCase())) {
-                return List.of("give");
+            // Subcommands: give, allow, list
+            return SUBCOMMANDS.stream()
+                .filter(s -> s.startsWith(args[0].toLowerCase()))
+                .collect(java.util.stream.Collectors.toList());
+        }
+
+        String sub = args[0].toLowerCase();
+
+        if (sub.equals("give")) {
+            if (args.length == 2) {
+                // Player names
+                return Bukkit.getOnlinePlayers().stream()
+                    .map(Player::getName)
+                    .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
+                    .collect(java.util.stream.Collectors.toList());
+            }
+            if (args.length == 3) {
+                // Item names
+                return ITEM_NAMES.stream()
+                    .filter(name -> name.startsWith(args[2].toLowerCase()))
+                    .collect(java.util.stream.Collectors.toList());
+            }
+            if (args.length == 4) {
+                // Durability hint — only show for items that accept it
+                if (DURABILITY_REQUIRED.contains(args[2].toLowerCase())) {
+                    return List.of("<耐久>");
+                }
+                return List.of();
             }
             return List.of();
         }
 
-        if (!args[0].equalsIgnoreCase("give")) {
-            return List.of();
-        }
-
-        if (args.length == 2) {
-            // Player names
-            return Bukkit.getOnlinePlayers().stream()
-                .map(Player::getName)
-                .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
-                .collect(java.util.stream.Collectors.toList());
-        }
-
-        if (args.length == 3) {
-            // Item names
-            return ITEM_NAMES.stream()
-                .filter(name -> name.startsWith(args[2].toLowerCase()))
-                .collect(java.util.stream.Collectors.toList());
-        }
-
-        if (args.length == 4) {
-            // Durability hint — only show for items that accept it
-            if (DURABILITY_REQUIRED.contains(args[2].toLowerCase())) {
-                return List.of("<耐久>");
+        if (sub.equals("allow")) {
+            if (args.length == 2) {
+                // Players currently in cooldown file + online players
+                List<String> suggestions = new ArrayList<>(plugin.getAncientCoreCooldownNames());
+                Bukkit.getOnlinePlayers().stream()
+                    .map(Player::getName)
+                    .filter(name -> !suggestions.contains(name))
+                    .forEach(suggestions::add);
+                return suggestions.stream()
+                    .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
+                    .sorted()
+                    .collect(java.util.stream.Collectors.toList());
             }
             return List.of();
         }

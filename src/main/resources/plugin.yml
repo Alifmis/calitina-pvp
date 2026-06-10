@@ -6,7 +6,7 @@ folia-supported: true
 commands:
   pvp:
     description: "Calitina PVP admin commands"
-    usage: "/pvp give <player_name> <item> [durability]"
+    usage: "/pvp give <player_name> <item> [durability]  |  /pvp allow [player_name]  |  /pvp list"
     permission: calitina-pvp.admin
 permissions:
   calitina-pvp.admin:

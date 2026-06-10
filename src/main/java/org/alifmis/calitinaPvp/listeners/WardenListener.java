@@ -37,6 +37,13 @@ public class WardenListener implements Listener {
     public void onWardenDeath(EntityDeathEvent event) {
         if (event.getEntityType() != EntityType.WARDEN) return;
 
+        // Must be killed by a player
+        Player killer = event.getEntity().getKiller();
+        if (killer == null) return;
+
+        // Player already caused an Ancient Core drop — no more
+        if (plugin.isAncientCoreCooldown(killer.getName())) return;
+
         double chance = plugin.getConfig().getDouble("warden-drop-chance", 1.0);
         if (ThreadLocalRandom.current().nextDouble() * 100.0 >= chance) return;
 
@@ -46,6 +53,9 @@ public class WardenListener implements Listener {
         event.getEntity().getWorld().dropItemNaturally(
             event.getEntity().getLocation(), core
         );
+
+        // Record this player — they can never get another Ancient Core drop
+        plugin.addAncientCoreCooldown(killer.getName());
     }
 
     @EventHandler
