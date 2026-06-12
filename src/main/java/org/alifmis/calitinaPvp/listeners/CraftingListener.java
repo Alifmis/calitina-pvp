@@ -30,7 +30,7 @@ public class CraftingListener implements Listener {
     public void onPrepareCraft(PrepareItemCraftEvent event) {
         InventoryView view = event.getView();
         InventoryType type = view.getType();
-        if (type != InventoryType.WORKBENCH && type != InventoryType.CRAFTER) return;
+        if (type != InventoryType.WORKBENCH) return;
 
         CraftingInventory inv = event.getInventory();
         ItemStack[] matrix = inv.getMatrix();
@@ -48,12 +48,13 @@ public class CraftingListener implements Listener {
 
         InventoryView view = event.getView();
         InventoryType type = view.getType();
-        if (type != InventoryType.WORKBENCH && type != InventoryType.CRAFTER) return;
+        if (type != InventoryType.WORKBENCH) return;
 
         int rawSlot = event.getRawSlot();
         if (rawSlot != 0) return; // Only result slot
 
-        CraftingInventory inv = (CraftingInventory) view.getTopInventory();
+        // CRAFTER uses CraftInventoryCrafter, not CraftingInventory — skip manual click handling
+        if (!(view.getTopInventory() instanceof CraftingInventory inv)) return;
         ItemStack result = inv.getResult();
         if (result == null || !items.isFatalCore(result)) return;
 
