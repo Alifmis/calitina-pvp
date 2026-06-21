@@ -48,8 +48,8 @@ public class FatalWeaponListener implements Listener {
         LivingEntity victim = (LivingEntity) event.getEntity();
         fatalMarked.add(victim.getUniqueId());
 
-        // Set damage to kill anything instantly
-        event.setDamage(99999.0);
+        // kill anything instantly
+        victim.setHealth(0);
 
         // Visual + sound feedback
         Location loc = victim.getLocation().add(0, 1, 0);
