@@ -17,6 +17,7 @@ import org.alifmis.calitinaPvp.CustomItems;
 
 import java.util.Map;
 
+// Anvil: weapon + Fatal Core; non-mace keeps the core's remaining uses exactly, mace scales proportionally
 public class AnvilListener implements Listener {
 
     private final CalitinaPvp plugin;
@@ -27,6 +28,7 @@ public class AnvilListener implements Listener {
         this.items = items;
     }
 
+    // show the result preview in the anvil output slot
     @SuppressWarnings("removal")
     @EventHandler(priority = EventPriority.HIGH)
     public void onPrepareAnvil(PrepareAnvilEvent event) {
@@ -64,6 +66,7 @@ public class AnvilListener implements Listener {
         inv.setRepairCost(10);
     }
 
+    // intercept the result-slot click so only 1 Fatal Core is taken from the stack
     @SuppressWarnings("removal")
     @EventHandler(priority = EventPriority.LOWEST)
     public void onAnvilClick(InventoryClickEvent event) {

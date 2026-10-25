@@ -7,6 +7,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.alifmis.calitinaPvp.CustomItems;
 
+// prevents placing/using block-type model items such as the Dragon Egg
 public class InteractListener implements Listener {
 
     private final CustomItems items;

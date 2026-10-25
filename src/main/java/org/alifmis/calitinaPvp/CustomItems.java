@@ -15,8 +15,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.List;
 import java.util.Set;
 
+// central registry for all custom items and their PDC keys
 public final class CustomItems {
 
+    // PDC keys
     public static final String KEY_ANCIENT_CORE = "ancient_core";
     public static final String KEY_RESONANT_DRAGON_EGG = "resonant_dragon_egg";
     public static final String KEY_RESONANT_NETHER_STAR = "resonant_nether_star";
@@ -24,6 +26,7 @@ public final class CustomItems {
     public static final String KEY_FATAL_WEAPON = "fatal_weapon";
     public static final String KEY_FATAL_HIT = "fatal_hit"; // temporary marker on victim
 
+    // specialty weapons that get bonus uses
     public static final Set<Material> SPECIALTY_WEAPONS = Set.of(
         Material.MACE
     );
@@ -37,6 +40,7 @@ public final class CustomItems {
         Material.MACE, Material.TRIDENT
     );
 
+    // NamespacedKeys, initialized in init()
     private NamespacedKey ancientCoreKey;
     private NamespacedKey resonantDragonEggKey;
     private NamespacedKey resonantNetherStarKey;
@@ -65,6 +69,7 @@ public final class CustomItems {
         return new NamespacedKey(plugin, name);
     }
 
+    // public key accessors
     public NamespacedKey ancientCoreKey() { return ancientCoreKey; }
     public NamespacedKey resonantDragonEggKey() { return resonantDragonEggKey; }
     public NamespacedKey resonantNetherStarKey() { return resonantNetherStarKey; }
@@ -73,6 +78,7 @@ public final class CustomItems {
     public NamespacedKey fatalHitKey() { return fatalHitKey; }
     public NamespacedKey recipeKey() { return recipeKey; }
 
+    // item type checks
     public boolean isAncientCore(ItemStack item) {
         return item != null && item.hasItemMeta()
             && item.getItemMeta().getPersistentDataContainer().has(ancientCoreKey, PersistentDataType.INTEGER);
@@ -98,6 +104,7 @@ public final class CustomItems {
             && item.getItemMeta().getPersistentDataContainer().has(fatalWeaponKey, PersistentDataType.INTEGER);
     }
 
+    // durability / uses helpers
     public int getAncientCoreDurability(ItemStack item) {
         return item.getItemMeta().getPersistentDataContainer()
             .getOrDefault(ancientCoreKey, PersistentDataType.INTEGER, 0);
@@ -132,6 +139,7 @@ public final class CustomItems {
         });
     }
 
+    // item builders — 远古核心: drops from the Warden, deals sonic-boom-like damage
     public ItemStack createAncientCore(int durability) {
         int damagePercent = plugin.getConfig().getInt("ancient-core-damage-percent", 60);
         ItemStack item = ItemStack.of(Material.ECHO_SHARD);
@@ -154,6 +162,7 @@ public final class CustomItems {
         return item;
     }
 
+    // 受远古之力共鸣的龙蛋: drops from the Ender Dragon killed with an Ancient Core
     public ItemStack createResonantDragonEgg() {
         ItemStack item = ItemStack.of(Material.DRAGON_EGG);
         item.editMeta(meta -> {
@@ -170,6 +179,7 @@ public final class CustomItems {
         return item;
     }
 
+    // 受远古之力共鸣的下界之星: drops from the Wither killed with an Ancient Core
     public ItemStack createResonantNetherStar() {
         ItemStack item = ItemStack.of(Material.NETHER_STAR);
         item.editMeta(meta -> {
@@ -186,6 +196,7 @@ public final class CustomItems {
         return item;
     }
 
+    // 必杀核心: crafted from an Ancient Core plus the resonant items; uses = standalone charges
     public ItemStack createFatalCore(int uses) {
         ItemStack item = ItemStack.of(Material.NETHER_STAR);
         item.editMeta(meta -> {
@@ -206,6 +217,7 @@ public final class CustomItems {
         return item;
     }
 
+    // apply a Fatal Core to a weapon in an anvil; returns a copy with fatal_weapon PDC + lore
     public ItemStack applyFatalCoreToWeapon(ItemStack weapon, int totalUses) {
         ItemStack result = weapon.clone();
         result.editMeta(meta -> {
@@ -223,6 +235,7 @@ public final class CustomItems {
         return result;
     }
 
+    // MiniMessage helper
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
     public static Component mm(String message) {

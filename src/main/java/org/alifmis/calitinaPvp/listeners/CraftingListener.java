@@ -16,6 +16,7 @@ import org.alifmis.calitinaPvp.CustomItems;
 
 import java.util.Map;
 
+// 必杀核心 recipe: corners = resonant nether star, edges = resonant dragon egg, center = Ancient Core
 public class CraftingListener implements Listener {
 
     private final CalitinaPvp plugin;
@@ -26,6 +27,7 @@ public class CraftingListener implements Listener {
         this.items = items;
     }
 
+    // show the Fatal Core preview in the output slot when the pattern matches
     @EventHandler
     public void onPrepareCraft(PrepareItemCraftEvent event) {
         InventoryView view = event.getView();
@@ -41,6 +43,7 @@ public class CraftingListener implements Listener {
         }
     }
 
+    // consume the ingredients and give the result; LOWEST so we run before the CraftItemEvent snapshot
     @EventHandler(priority = EventPriority.LOWEST)
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;

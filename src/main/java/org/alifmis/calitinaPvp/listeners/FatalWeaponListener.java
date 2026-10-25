@@ -24,6 +24,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+// fatal weapon melee kills and Fatal Core sonic booms, both bypassing the Totem of Undying
 public class FatalWeaponListener implements Listener {
 
     private final CalitinaPvp plugin;
@@ -37,6 +38,7 @@ public class FatalWeaponListener implements Listener {
         this.items = items;
     }
 
+    // fatal weapon melee instant kill
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onFatalWeaponAttack(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) return;
@@ -63,6 +65,7 @@ public class FatalWeaponListener implements Listener {
         decrementFatalWeapon(player, weapon);
     }
 
+    // cancel Totem of Undying resurrection for fatal-marked entities
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onResurrect(EntityResurrectEvent event) {
         if (fatalMarked.remove(event.getEntity().getUniqueId())) {
@@ -70,6 +73,7 @@ public class FatalWeaponListener implements Listener {
         }
     }
 
+    // Fatal Core standalone right-click: instant-kill sonic boom
     @EventHandler
     public void onFatalCoreUse(PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) return;
@@ -187,6 +191,7 @@ public class FatalWeaponListener implements Listener {
         }
     }
 
+    // helpers
     private void decrementFatalWeapon(Player player, ItemStack weapon) {
         items.decrementFatalWeaponUses(weapon);
         int remaining = items.getFatalCoreUses(weapon);

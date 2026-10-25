@@ -21,11 +21,13 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
+// Warden Ancient Core drops, Ancient Core sonic boom, and last-core-hit tracking on bosses
 public class WardenListener implements Listener {
 
     private final CalitinaPvp plugin;
     private final CustomItems items;
 
+    // last player to hit this boss with an Ancient Core: entity UUID -> player UUID
     public final Map<UUID, UUID> ancientCoreLastHitter = new ConcurrentHashMap<>();
 
     public WardenListener(CalitinaPvp plugin, CustomItems items) {
@@ -33,6 +35,7 @@ public class WardenListener implements Listener {
         this.items = items;
     }
 
+    // Warden death: chance to drop an Ancient Core, player kills only, one per player ever
     @EventHandler
     public void onWardenDeath(EntityDeathEvent event) {
         if (event.getEntityType() != EntityType.WARDEN) return;
@@ -58,6 +61,7 @@ public class WardenListener implements Listener {
         plugin.addAncientCoreCooldown(killer.getName());
     }
 
+    // Ancient Core right-click: sonic boom, tracks boss hits, only 1 durability per use
     @EventHandler
     public void onAncientCoreUse(PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) return;

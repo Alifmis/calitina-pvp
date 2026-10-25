@@ -14,6 +14,7 @@ public final class CalitinaPvp extends JavaPlugin {
 
     private CustomItems customItems;
 
+    // players listed here will NOT get Ancient Core drops
     private final Set<String> ancientCoreCooldown = ConcurrentHashMap.newKeySet();
     private File cooldownFile;
 
@@ -64,6 +65,7 @@ public final class CalitinaPvp extends JavaPlugin {
         return customItems;
     }
 
+    // Ancient Core cooldown API
     public boolean isAncientCoreCooldown(String playerName) {
         return ancientCoreCooldown.contains(playerName);
     }

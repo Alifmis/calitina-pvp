@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+// /pvp give <player> <item> [durability] | /pvp allow [player] | /pvp list | /pvp reload — OP or console
 public class PvpCommand implements CommandExecutor, TabCompleter {
 
     private static final List<String> ITEM_NAMES = List.of(
@@ -63,18 +64,21 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
         };
     }
 
+    // /pvp give
     private boolean handleGive(CommandSender sender, String[] args) {
         if (args.length < 3) {
             sender.sendMessage(CustomItems.mm("<red>用法: /pvp give <player_name> <item> [durability]</red>"));
             return true;
         }
 
+        // parse player
         Player target = Bukkit.getPlayer(args[1]);
         if (target == null) {
             sender.sendMessage(CustomItems.mm("<red>未找到玩家: " + args[1] + "</red>"));
             return true;
         }
 
+        // parse item
         String itemArg = args[2].toLowerCase();
         int durability = -1; // sentinel: not provided
 
@@ -91,6 +95,7 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
             }
         }
 
+        // create item
         ItemStack result = switch (itemArg) {
             case "ancient_core" -> {
                 int maxDura = durability > 0 ? durability
@@ -123,6 +128,7 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
 
         if (result == null) return true;
 
+        // give to player, dropping anything that does not fit
         var leftover = target.getInventory().addItem(result);
         for (var drop : leftover.values()) {
             target.getWorld().dropItem(target.getLocation(), drop);
@@ -135,6 +141,7 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    // /pvp allow
     private boolean handleAllow(CommandSender sender, String[] args) {
         if (args.length == 1) {
             // /pvp allow — remove ALL players
@@ -157,6 +164,7 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    // /pvp list
     private boolean handleList(CommandSender sender) {
         Set<String> names = plugin.getAncientCoreCooldownNames();
         if (names.isEmpty()) {
@@ -171,12 +179,14 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    // /pvp reload
     private boolean handleReload(CommandSender sender) {
         plugin.reloadAll();
         sender.sendMessage(CustomItems.mm("<green>配置已重新加载。</green>"));
         return true;
     }
 
+    // tab complete
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender,
                                                  @NotNull Command command,
@@ -195,6 +205,7 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
 
         String sub = args[0].toLowerCase();
 
+        // give subcommand
         if (sub.equals("give")) {
             if (args.length == 2) {
                 // Player names
@@ -219,6 +230,7 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
             return List.of();
         }
 
+        // allow subcommand
         if (sub.equals("allow")) {
             if (args.length == 2) {
                 // Players currently in cooldown file + online players
@@ -235,6 +247,7 @@ public class PvpCommand implements CommandExecutor, TabCompleter {
             return List.of();
         }
 
+        // list subcommand takes no arguments
         return List.of();
     }
 }

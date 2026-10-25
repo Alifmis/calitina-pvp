@@ -15,6 +15,7 @@ import org.alifmis.calitinaPvp.CustomItems;
 
 import java.util.concurrent.ThreadLocalRandom;
 
+// Ender Dragon / Wither drops after the boss was hit by an Ancient Core sonic boom
 public class BossDropListener implements Listener {
 
     private final CalitinaPvp plugin;
